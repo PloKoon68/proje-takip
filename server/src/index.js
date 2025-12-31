@@ -11,8 +11,8 @@ const criteriasRoutes = require('./routes/criteriasRoutes');
 const decisionMatrixRoutes = require('./routes/decisionMatrixRoutes');
 */
 const authRoutes = require('./routes/authRoutes');
-const modelsRoutes = require('./routes/modelsRoutes');
-const processRoutes = require('./routes/processRoutes');
+//const modelsRoutes = require('./routes/modelsRoutes');
+//const processRoutes = require('./routes/processRoutes');
 
 const app = express();
 const port = process.env.PORT || 5000;                                                  
@@ -36,8 +36,10 @@ app.use('/api/criterias', criteriasRoutes);
 app.use('/api/decisionMatrix', decisionMatrixRoutes);
 */
 app.use('/api/auth', authRoutes);
+/*
 app.use('/api/models', modelsRoutes);
 app.use('/api/process', processRoutes);
+*/
 
 // Health check endpoint for Render
 /*

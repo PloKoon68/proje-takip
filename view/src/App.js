@@ -18,7 +18,7 @@ import AboutPage from './components/Pages/Public Pages/AboutPage.js';
 import ServerDownPage from "./components/Pages/ServerDownPage.js"
 
 import { useAuth } from './components/AuthContext';
-import { checkExpressHealth, checkCrowHealth } from './api/axious.js';
+import { checkExpressHealth } from './api/axious.js';
 import GlobalSpinner from "./components/GlobalSpinner.js"
 
 function App() {
@@ -27,7 +27,6 @@ function App() {
 
   useEffect(() => {
     checkExpressHealth();
-    checkCrowHealth();
   }, []);
 
   return (

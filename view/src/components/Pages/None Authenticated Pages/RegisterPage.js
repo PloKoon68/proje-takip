@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Brain, Mail, Lock, AlertCircle, X, Zap, User } from 'lucide-react';
+import { Brain, Mail, Lock, AlertCircle, X, Zap, User, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../AuthContext';
 import { register } from "../../../api/apiCalls/Express/auth";
+import '../../../style/Pages/Register.css';
 
 export default function RegisterPage() {
-
   const navigate = useNavigate();
   const { setIsLoggedIn } = useAuth();
 
@@ -46,12 +46,10 @@ export default function RegisterPage() {
       const result = await register(username, password, email);
 
       if (result.success) {
-        console.log('Registration successful');
-        navigate('/my-models');
         setIsLoggedIn(true);
+        navigate('/projeler'); // Başarılı kayıt sonrası projeler sayfasına yönlendirme
       } else if (result.reason === 'user_exists') {
         _errors.userExists = true;
-        setErrors(_errors);
       } else if (result.reason === 'server_error') {
         navigate('/server-error');
         return;
@@ -63,183 +61,104 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 relative overflow-hidden flex items-center justify-center p-4">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 2px 2px, rgb(148, 163, 184) 1px, transparent 0)',
-          backgroundSize: '40px 40px'
-        }}></div>
-      </div>
+    <div className="login-page">
+      {/* Arka Plan Efektleri */}
+      <div className="bg-glow blue"></div>
+      <div className="bg-glow orange"></div>
 
-      {/* Animated Background Shapes */}
-      <div className="absolute -left-20 -top-20 w-64 h-64 bg-gradient-to-br from-blue-600 to-blue-400 rounded-full opacity-20 blur-3xl animate-pulse"></div>
-      <div className="absolute -right-8 -bottom-20 w-64 h-64 bg-gradient-to-br from-orange-600 to-orange-400 rounded-full opacity-20 blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-
-      {/* Registration Form Container */}
-      <div className="relative w-full max-w-md">
-        {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-green-400/10 border border-green-400/20 rounded-full px-4 py-2 mb-4">
-            <Zap className="h-4 w-4 text-green-400" />
-            <span className="text-green-400 text-sm font-medium">Visual Deep Learning Platform</span>
+      <div className="login-container">
+        <div className="login-brand">
+          <div className="brand-badge">
+            <Zap size={14} /> <span>Proje Takip Sistemi</span>
           </div>
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Brain className="h-8 w-8 text-green-400" />
-            <h1 className="text-3xl font-bold text-white">Create Account</h1>
+          <div className="brand-logo">
+            <Brain size={32} />
+            <h1>Hesap Oluştur</h1>
           </div>
-          <p className="text-slate-400 text-sm">Join to start building your models</p>
+          <p>Projelerinizi yönetmeye başlamak için aramıza katılın</p>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-700 shadow-2xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* User Exists Error */}
+        <div className="login-card">
+          <form onSubmit={handleSubmit}>
             {errors.userExists && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
-                <p className="text-red-400 text-sm flex-1">An account with this username already exists.</p>
-                <button
-                  type="button"
-                  onClick={() => setErrors(prev => ({ ...prev, userExists: false }))}
-                  className="text-red-400 hover:text-red-300 transition-colors"
-                >
-                  <X className="h-5 w-5" />
+              <div className="auth-error-msg">
+                <AlertCircle size={18} />
+                <span>Bu kullanıcı adı veya e-posta zaten kullanımda!</span>
+                <button type="button" onClick={() => setErrors(p => ({...p, userExists: false}))}>
+                  <X size={16} />
                 </button>
               </div>
             )}
 
-            {/* Username Field */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <div className="input-group">
+              <label>Kullanıcı Adı</label>
+              <div className="input-wrapper">
+                <User className="input-icon" size={20} />
                 <input
-                  id="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Choose a unique username"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
+                  placeholder="Kullanıcı adınızı belirleyin"
                 />
               </div>
-              {errors.usernameBlank && (
-                <p className="text-red-400 text-sm mt-1">Username can't be empty!</p>
-              )}
-              {errors.usernameHasSpaces && (
-                <p className="text-red-400 text-sm mt-1">Username cannot contain spaces.</p>
-              )}
+              {errors.usernameBlank && <p className="field-error">Kullanıcı adı boş bırakılamaz!</p>}
+              {errors.usernameHasSpaces && <p className="field-error">Kullanıcı adı boşluk içeremez!</p>}
             </div>
-            
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+
+            <div className="input-group">
+              <label>E-posta Adresi</label>
+              <div className="input-wrapper">
+                <Mail className="input-icon" size={20} />
                 <input
-                  id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email address"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
+                  placeholder="ornek@mail.com"
                 />
               </div>
-              {errors.emailBlank && (
-                <p className="text-red-400 text-sm mt-1">Email can't be empty!</p>
-              )}
+              {errors.emailBlank && <p className="field-error">E-posta alanı boş bırakılamaz!</p>}
             </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <div className="input-group">
+              <label>Şifre</label>
+              <div className="input-wrapper">
+                <Lock className="input-icon" size={20} />
                 <input
-                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Create a strong password"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
+                  placeholder="Güçlü bir şifre girin"
                 />
               </div>
-              {errors.passwordBlank && (
-                <p className="text-red-400 text-sm mt-1">Password can't be empty!</p>
-              )}
+              {errors.passwordBlank && <p className="field-error">Şifre alanı boş bırakılamaz!</p>}
             </div>
-            
-            {/* Confirm Password Field */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+
+            <div className="input-group">
+              <label>Şifre Tekrar</label>
+              <div className="input-wrapper">
+                <Lock className="input-icon" size={20} />
                 <input
-                  id="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
+                  placeholder="Şifrenizi tekrar girin"
                 />
               </div>
-              {errors.confirmPasswordNotMatch && (
-                <p className="text-red-400 text-sm mt-1">Passwords do not match!</p>
-              )}
+              {errors.confirmPasswordNotMatch && <p className="field-error">Şifreler birbiriyle eşleşmiyor!</p>}
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold text-lg transition-all hover:shadow-lg hover:shadow-green-600/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600 disabled:hover:shadow-none"
-            >
+            <button type="submit" className="login-submit-btn" disabled={isLoading}>
               {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating Account...
-                </span>
+                <div className="spinner"></div>
               ) : (
-                'Sign Up'
+                <>Kayıt Ol <ArrowRight size={18} /></>
               )}
             </button>
           </form>
 
-          {/* Sign In Link */}
-          <div className="mt-6 text-center">
-            <p className="text-slate-400 text-sm">
-              Already have an account?{' '}
-              <button
-                type="button"
-                onClick={() => navigate('/login')}
-                className="text-green-400 hover:text-green-300 font-medium transition-colors"
-              >
-                Sign In
-              </button>
-            </p>
+          <div className="login-footer">
+            <p>Zaten hesabınız var mı? <button onClick={() => navigate('/login')}>Giriş Yap</button></p>
           </div>
-        </div>
-
-        {/* Additional Info */}
-        <div className="mt-6 text-center">
-          <p className="text-slate-500 text-xs">
-            By signing up, you agree to our{' '}
-            <a href="#" className="text-slate-400 hover:text-slate-300 transition-colors">
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a href="#" className="text-slate-400 hover:text-slate-300 transition-colors">
-              Privacy Policy
-            </a>
-          </p>
         </div>
       </div>
     </div>

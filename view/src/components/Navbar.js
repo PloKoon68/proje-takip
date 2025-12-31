@@ -36,7 +36,7 @@ function Navbar({ saved = true, setSaved = () => {} }) {
         <div className="nav-left">
           <button onClick={() => handleNavigation('/')} className="nav-logo">
             <Brain className="logo-icon" />
-            <span className="logo-text">Proje Takip</span>
+            <span className="logo-text">VAN İL MEM ARGE</span>
           </button>
 
           <div className="nav-links desktop-only">
