@@ -1,12 +1,13 @@
+// view/src/components/Pages/Authenticated Pages/ProjectsPage.js
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Plus, Edit2, Trash2, Save, X, Search, Clock, Calendar, Users, FileText, Upload, CheckCircle, AlertCircle } from "lucide-react";
 import "../../../style/Pages/ProjectsPage.css";
 
-// API fonksiyonlarınızı import edin (gerçek API hazır olduğunda bu satırları etkinleştirin)
+// API fonksiyonlarınızı import edin
 import { fetchProjects, createProject, updateProject, deleteProject } from "../../../api/apiCalls/Express/projectsApi.js";
-// import { fetchEmployees } from "../../../api/apiCalls/Express/employeeApi.js"; // Employee API'nız olduğunda bunu da import edin
-import GlobalSpinner from "../../GlobalSpinner.js"; // GlobalSpinner'ı import et
+// import { fetchEmployees } from "../../../api/apiCalls/Express/employeeApi.js"; 
+import GlobalSpinner from "../../GlobalSpinner.js"; 
 
 export default function Projects() {
   const navigate = useNavigate();
@@ -17,28 +18,26 @@ export default function Projects() {
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [loading, setLoading] = useState(true); // Başlangıçta loading true olacak
-  const [employees, setEmployees] = useState([]); // Çalışan listesi
+  const [loading, setLoading] = useState(true); 
+  const [employees, setEmployees] = useState([]); 
   
-  // Form state
+  // Form state - 'file' artık File objesi değil, dosya adı (string) tutacak
   const [formData, setFormData] = useState({
     name: "",
     year: new Date().getFullYear().toString(),
     responsibles: [],
     description: "",
-    file: null // Dosya yükleme için
+    fileName: null // Yüklenen dosyanın adı (string), File objesi değil
   });
 
   const [formErrors, setFormErrors] = useState({});
-  const [employeeSearch, setEmployeeSearch] = useState(""); // Çalışan arama inputu için state
+  const [employeeSearch, setEmployeeSearch] = useState("");
 
-  // Veri yükleme (projeler ve çalışanlar)
   useEffect(() => {
     const loadData = async () => {
       try {
-        setLoading(true); // Yüklemeye başlarken spinner'ı göster
+        setLoading(true); 
         
-        // Mock employees verisi (Gerçek Employee API'nız hazır olana kadar)
         const mockEmployees = [
           { _id: "1", name: "Ahmet Yılmaz" },
           { _id: "2", name: "Ayşe Demir" },
@@ -47,43 +46,35 @@ export default function Projects() {
           { _id: "5", name: "Ali Çelik" }
         ];
         setEmployees(mockEmployees);
-        // Eğer gerçek Employee API'nız varsa:
-        // const fetchedEmployees = await fetchEmployees(); 
-        // setEmployees(fetchedEmployees);
 
-        // Gerçek API çağrısı: Projeleri backend'den çek
         const fetchedProjects = await fetchProjects(); 
         setProjects(fetchedProjects);
-        setFilteredProjects(fetchedProjects); // Başlangıçta filtrelenmiş liste de tüm projeler olacak
+        setFilteredProjects(fetchedProjects);
 
       } catch (error) {
         console.error("Veri yüklenirken hata oluştu:", error);
-        // Hata durumunda kullanıcıya bilgi gösterme veya başka bir aksiyon alma
       } finally {
-        setLoading(false); // Yükleme bittiğinde spinner'ı gizle
+        setLoading(false); 
       }
     };
 
     loadData();
-  }, []); // Boş bağımlılık dizisi, component mount edildiğinde bir kere çalışmasını sağlar
+  }, []);
 
-  // Arama filtreleme
-    useEffect(() => {
-      const filtered = projects.filter(project => {
-        // project'in undefined veya null olup olmadığını kontrol et
-        if (!project) {
-          return false; // Undefined veya null olan elemanları filtrele
-        }
-        return (
-          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (project.responsibles && project.responsibles.some(r => r.toLowerCase().includes(searchQuery.toLowerCase())))
-        );
-      });
-      setFilteredProjects(filtered);
-    }, [searchQuery, projects]);
-    
-  // Modal açma/kapama ve form durumunu yönetme
+  useEffect(() => {
+    const filtered = projects.filter(project => {
+      if (!project) {
+        return false; 
+      }
+      return (
+        project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (project.responsibles && project.responsibles.some(r => r.toLowerCase().includes(searchQuery.toLowerCase())))
+      );
+    });
+    setFilteredProjects(filtered);
+  }, [searchQuery, projects]);
+
   const handleOpenModal = (project = null) => {
     if (project) {
       setEditingProject(project);
@@ -92,7 +83,7 @@ export default function Projects() {
         year: project.year,
         responsibles: project.responsibles,
         description: project.description,
-        file: null // Dosya düzenlemede yeniden seçilmesi gerekebilir
+        fileName: project.fileName || null // Mevcut dosya adını al
       });
     } else {
       setEditingProject(null);
@@ -101,65 +92,65 @@ export default function Projects() {
         year: new Date().getFullYear().toString(),
         responsibles: [],
         description: "",
-        file: null
+        fileName: null
       });
     }
-    setFormErrors({}); // Form açıldığında hata mesajlarını temizle
-    setEmployeeSearch(""); // Çalışan arama inputunu temizle
+    setFormErrors({}); 
+    setEmployeeSearch(""); 
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingProject(null);
-    setFormData({ // Formu sıfırla
+    setFormData({ 
       name: "",
       year: new Date().getFullYear().toString(),
       responsibles: [],
       description: "",
-      file: null
+      fileName: null
     });
     setFormErrors({});
-    setEmployeeSearch(""); // Çalışan arama inputunu temizle
+    setEmployeeSearch(""); 
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Kullanıcı yazmaya başladığında ilgili hata mesajını temizle
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
 
-  // Sorumlu çalışan seçimi
   const handleResponsibleToggle = (employeeName) => {
     setFormData(prev => ({
       ...prev,
       responsibles: prev.responsibles.includes(employeeName)
-        ? prev.responsibles.filter(r => r !== employeeName) // Zaten seçiliyse çıkar
-        : [...prev.responsibles, employeeName] // Seçili değilse ekle
+        ? prev.responsibles.filter(r => r !== employeeName) 
+        : [...prev.responsibles, employeeName] 
     }));
     if (formErrors.responsibles) {
       setFormErrors(prev => ({ ...prev, responsibles: "" }));
     }
   };
 
-  // Dosya seçimi
+  // Dosya seçimi artık sadece dosya adını state'e kaydedecek
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
       if (validTypes.includes(file.type)) {
-        setFormData(prev => ({ ...prev, file }));
-        setFormErrors(prev => ({ ...prev, file: "" }));
+        setFormData(prev => ({ ...prev, fileName: file.name })); // Sadece dosya adını kaydet
+        setFormErrors(prev => ({ ...prev, fileName: "" }));
       } else {
-        setFormErrors(prev => ({ ...prev, file: "Sadece PDF veya DOCX dosyası yükleyebilirsiniz" }));
+        setFormErrors(prev => ({ ...prev, fileName: "Sadece PDF veya DOCX dosyası yükleyebilirsiniz" }));
       }
+    } else {
+        setFormData(prev => ({ ...prev, fileName: null })); // Dosya seçimi iptal edilirse
+        setFormErrors(prev => ({ ...prev, fileName: "" }));
     }
   };
 
-  // Form doğrulama (validation)
   const validateForm = () => {
     const errors = {};
     if (!formData.name.trim()) errors.name = "Proje adı gereklidir";
@@ -167,90 +158,75 @@ export default function Projects() {
     if (formData.responsibles.length === 0) errors.responsibles = "En az bir sorumlu seçmelisiniz";
     if (!formData.description.trim()) errors.description = "Proje açıklaması gereklidir";
     if (formData.description.length > 1000) errors.description = `Açıklama ${1000 - formData.description.length} karakter daha az olmalı`;
-    // Yeni proje oluşturuluyorsa ve dosya seçilmemişse dosya zorunlu
-    if (!editingProject && !formData.file) errors.file = "Yıllık plan dosyası gereklidir";
+    // Dosya adı (fileName) zorunlu mu? Evet, yeni projede.
+    if (!editingProject && !formData.fileName) errors.fileName = "Yıllık plan dosyası adı gereklidir"; 
     
     setFormErrors(errors);
-    return Object.keys(errors).length === 0; // Hata yoksa true döner
+    return Object.keys(errors).length === 0; 
   };
 
-  // Form gönderimi (yeni proje oluşturma/düzenleme)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(`handleSubmit: `, formData);
-    if (!validateForm()) return; // Form doğrulamadan geçmezse dur
-    console.log(`handleSubmit: after validateForm`);
+    
+    if (!validateForm()) return; 
 
     try {
-      setLoading(true); // Yüklemeye başlarken spinner'ı göster
+      setLoading(true); 
       
-      const projectData = new FormData(); // Dosya yüklemek için FormData kullanmalıyız
-      projectData.append('name', formData.name);
-      projectData.append('year', formData.year);
-      projectData.append('description', formData.description);
-      projectData.append('responsibles', JSON.stringify(formData.responsibles)); // Array'i string olarak gönder
+      // FormData yerine JSON objesi oluşturuyoruz
+      const projectData = {
+        name: formData.name,
+        year: formData.year,
+        description: formData.description,
+        responsibles: formData.responsibles, // Array olarak doğrudan gönder
+        fileName: formData.fileName, // Sadece dosya adını gönder
+        filePath: null // S3 entegrasyonuna kadar null veya undefined
+      };
 
-      if (formData.file) {
-        projectData.append('file', formData.file);
-      }
-
+      let result;
       if (editingProject) {
         // Mevcut projeyi güncelleme işlemi
-        // const response = await updateProject(editingProject._id, projectData); // Gerçek API çağrısı
-        // setProjects(prev => prev.map(p => p._id === editingProject._id ? response.project : p));
-        // Mock güncelleme:
-        const updatedProject = {
-          ...editingProject,
-          ...formData,
-          fileName: formData.file ? formData.file.name : editingProject.fileName,
-          updatedAt: new Date().toISOString()
-        };
-        setProjects(prev => prev.map(p => p._id === editingProject._id ? updatedProject : p));
+        result = await updateProject(editingProject._id, projectData); 
       } else {
-        // Yeni proje oluşturma işlemi
-         const response = await createProject(projectData); // Gerçek API çağrısı
-         setProjects(prev => [...prev, response.project]);
-        // Mock oluşturma:
-        const newProject = {
-          _id: Date.now().toString(),
-          ...formData,
-          fileName: formData.file ? formData.file.name : null, // Yeni projede dosya varsa adını ekle
-          status: "planning",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        setProjects(prev => [...prev, newProject]);
+        result = await createProject(projectData); 
       }
       
-      handleCloseModal(); // Modal'ı kapat
+      if (result.success) {
+        if (editingProject) {
+          setProjects(prev => prev.map(p => p._id === editingProject._id ? result.project : p));
+        } else {
+          setProjects(prev => [...prev, result.project]);
+        }
+        handleCloseModal(); 
+      } else if (result.reason === "duplicate_name") {
+        setFormErrors(prev => ({ ...prev, name: result.message })); 
+      } else {
+        setFormErrors(prev => ({ ...prev, submit: result.message || "Proje kaydedilirken bir hata oluştu" }));
+      }
     } catch (error) {
-      console.error("Proje kaydedilirken hata oluştu:", error);
-      setFormErrors({ submit: "Proje kaydedilirken bir hata oluştu" });
+      console.error("Proje kaydedilirken bilinmeyen hata:", error);
+      setFormErrors({ submit: "Proje kaydedilirken beklenmeyen bir hata oluştu." });
     } finally {
-      setLoading(false); // Yükleme bittiğinde spinner'ı gizle
+      setLoading(false);
     }
   };
 
-  // Proje silme işlemi
   const handleDeleteProject = async (projectId) => {
     try {
-      // await deleteProject(projectId); // Gerçek API çağrısı
-      setProjects(prev => prev.filter(p => p._id !== projectId)); // UI'dan kaldır
-      setDeleteConfirm(null); // Onay durumunu sıfırla
+      await deleteProject(projectId); 
+      setProjects(prev => prev.filter(p => p._id !== projectId)); 
+      setDeleteConfirm(null); 
     } catch (error) {
       console.error("Proje silinirken hata oluştu:", error);
-      // Hata mesajı gösterilebilir
     }
   };
 
-  // Tarih formatlama yardımcı fonksiyonu
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
-  // Durum bilgisi yardımcı fonksiyonu
   const getStatusInfo = (status) => {
     switch (status) {
       case "active":
@@ -264,18 +240,16 @@ export default function Projects() {
     }
   };
 
-  // Yıl seçenekleri
   const yearOptions = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i);
 
-  // Çalışan arama inputuna göre çalışanları filtrele
   const filteredEmployees = employees.filter(employee =>
     employee.name.toLowerCase().includes(employeeSearch.toLowerCase())
   );
 
   return (
     <div className="projects-page">
-      {loading && <GlobalSpinner />} {/* Eğer loading true ise GlobalSpinner'ı göster */}
-      {!loading && ( // Eğer loading false ise sayfa içeriğini göster
+      {loading && <GlobalSpinner />} 
+      {!loading && ( 
         <div className="projects-container">
           {/* Header */}
           <div className="projects-header">
@@ -331,7 +305,6 @@ export default function Projects() {
                     key={project._id}
                     className="project-card"
                     onClick={(e) => {
-                      // Butonlara tıklanınca navigate etme, sadece kartın boş alanına tıklanınca et
                       if (!e.target.closest("button")) {
                         navigate(`/project/${project._id}`);
                       }
@@ -357,10 +330,10 @@ export default function Projects() {
                       <div className="card-info">
                         <Users className="info-icon" />
                         <div className="responsibles">
-                          {project.responsibles.slice(0, 2).map((resp, idx) => (
+                          {project.responsibles && project.responsibles.slice(0, 2).map((resp, idx) => ( 
                             <span key={idx} className="responsible-badge">{resp}</span>
                           ))}
-                          {project.responsibles.length > 2 && (
+                          {project.responsibles && project.responsibles.length > 2 && ( 
                             <span className="responsible-badge">+{project.responsibles.length - 2}</span>
                           )}
                         </div>
@@ -473,7 +446,7 @@ export default function Projects() {
               <div className="form-group">
                 <label>
                   Sorumlular <span className="required">*</span>
-                  {formData.responsibles.length > 0 && (
+                  {formData.responsibles && formData.responsibles.length > 0 && ( 
                     <span className="selected-count">({formData.responsibles.length} seçildi)</span>
                   )}
                 </label>
@@ -538,14 +511,14 @@ export default function Projects() {
                 {formErrors.description && <span className="error-message">{formErrors.description}</span>}
               </div>
 
-              {/* Dosya Yükleme */}
+              {/* Dosya Yükleme - Artık sadece dosya adı için */}
               <div className="form-group">
                 <label htmlFor="file">
-                  Yıllık Plan (PDF/DOCX) {!editingProject && <span className="required">*</span>}
+                  Yıllık Plan Dosya Adı {!editingProject && <span className="required">*</span>}
                 </label>
                 <div className="file-upload">
                   <input
-                    type="file"
+                    type="file" // Input tipi hala 'file' olmalı ki kullanıcı seçebilsin
                     id="file"
                     accept=".pdf,.doc,.docx"
                     onChange={handleFileChange}
@@ -553,15 +526,15 @@ export default function Projects() {
                   <label htmlFor="file" className="file-upload-label">
                     <Upload className="icon" />
                     <span>
-                      {formData.file 
-                        ? formData.file.name 
+                      {formData.fileName // fileName state'inden oku
+                        ? formData.fileName 
                         : editingProject && editingProject.fileName
                         ? `Mevcut: ${editingProject.fileName}`
                         : "Dosya seçin"}
                     </span>
                   </label>
                 </div>
-                {formErrors.file && <span className="error-message">{formErrors.file}</span>}
+                {formErrors.fileName && <span className="error-message">{formErrors.fileName}</span>}
               </div>
 
               {/* Submit Error */}

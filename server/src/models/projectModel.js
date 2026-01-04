@@ -19,8 +19,8 @@ const projectSchema = new mongoose.Schema({
     required: true 
   },
   responsibles: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'employees' // Artık employees modeline referans veriyor
+    type: String
+//    ref: 'employees' // Artık employees modeline referans veriyor
   }],
   description: {
     type: String, 

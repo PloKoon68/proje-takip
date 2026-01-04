@@ -1,58 +1,133 @@
+// server/src/routes/projectsRoutes.js
 const express = require('express');
 const router = express.Router();
-const authenticateUser = require('../middleware/authenticateUser'); // adjust path as needed
-const { createProject, getAllProjectsByUserId, deleteProjectById, updateProjectById } = require('../models/projectModel.js');
 
-router.get("/", authenticateUser, async (req, res) => {
-  const userId = req.userId;
-  const projects = await getAllProjectsByUserId(userId);
-  res.json(projects);
-});
+const { createProject, updateProjectById, deleteProjectById, getAllProjectsByUserId, getProjectById } = require('../models/projectModel');
+const authenticateUser = require('../middleware/authenticateUser'); 
 
-
-// POST create a new project
+// Yeni proje oluşturma
 router.post('/', authenticateUser, async (req, res) => {
-  const { name, year, description, fileName, status, filePath } = req.body;
-  const userId = req.userId;
-
   try {
-    console.log(`creating: `, {name, year, userId, description, fileName, status, filePath});
-    const createdRow = await createProject({name, year, userId, description, fileName, status, filePath});
-    
-    res.status(201).json(createdRow);
+    console.log("req.body is: ", req.body); 
+
+    const { name, year, description, responsibles, fileName, filePath } = req.body; 
+    const userId = req.userId; 
+    console.log("id is: ", userId); 
+
+
+    const projectData = {
+      name,
+      year,
+      description,
+      userId,  
+      responsibles: responsibles,
+      fileName: fileName, 
+      filePath: filePath, 
+    };
+
+    const newProject = await createProject(projectData);
+    res.status(201).json(newProject);
   } catch (err) {
-    console.error('Error creating project:', err);
-    res.status(500).send('Error creating project');
+    console.error('Proje oluşturma hatası:', err);
+    if (err.code === 11000 && err.keyPattern && err.keyPattern.name) {
+      return res.status(409).json({ message: "Bu isimde bir proje zaten mevcut.", field: "name" });
+    }
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(val => val.message);
+      return res.status(400).json({ message: messages.join(', ') });
+    }
+    res.status(500).json({ message: "Sunucu hatası, proje oluşturulamadı." });
   }
 });
 
+// Kullanıcının tüm projelerini getir
+router.get('/', authenticateUser, async (req, res) => {
+  try {
+    const userId = req.userId; 
+    const projects = await getAllProjectsByUserId(userId);
+    res.json(projects);
+  } catch (err) {
+    console.error('Tüm projeleri getirme hatası:', err);
+    res.status(500).json({ message: 'Sunucu hatası, projeler getirilemedi.' });
+  }
+});
 
-// PUT update an existing project by ID
+// ID'ye göre proje getir
+router.get('/:id', authenticateUser, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const project = await getProjectById(id);
+    if (!project || project.owner._id.toString() !== req.userId) { 
+      return res.status(404).json({ message: 'Proje bulunamadı veya yetkiniz yok.' });
+    }
+    res.json(project);
+  } catch (err) {
+    console.error('Proje getirme hatası:', err);
+    res.status(500).json({ message: 'Sunucu hatası, proje getirilemedi.' });
+  }
+});
+
+// Projeyi güncelle
 router.put('/:id', authenticateUser, async (req, res) => {
-  const { id } = req.params;
-  const { name, year, description, fileName, status, filePath } = req.body;
   try {
-    const updatedProject = await updateProjectById(id, {name, year, description, fileName, status, filePath});
-    if (!updatedProject) {
-      return res.status(404).send('Project not found');
+    const { id } = req.params;
+    const { name, year, description, responsibles, status, fileName, filePath } = req.body; 
+    const ownerId = req.userId; 
+
+    // ÖNEMLİ DÜZELTME: responsibles zaten array olarak geldiği için JSON.parse'a GEREK YOK!
+    let parsedResponsibles = responsibles || []; 
+    // Aynı mantık, eğer front-end hala stringify yapıyorsa eski hali kalmalıydı.
+    // Ama artık JSON gönderdiğimiz için bu sade hali yeterli.
+
+    const updateData = {
+      name,
+      year,
+      description,
+      responsibles: parsedResponsibles,
+      status,
+      fileName: fileName, 
+      filePath: filePath, 
+    };
+
+    const existingProject = await getProjectById(id);
+    if (!existingProject || existingProject.owner._id.toString() !== ownerId) { 
+      return res.status(403).json({ message: "Bu projeyi güncellemeye yetkiniz yok." });
     }
-    res.status(200).json(updatedProject);
+
+    const updatedProject = await updateProjectById(id, updateData);
+    if (!updatedProject) {
+      return res.status(404).json({ message: "Güncellenecek proje bulunamadı." });
+    }
+    res.json(updatedProject);
   } catch (err) {
-    res.status(500).send('Error updating project');
+    console.error('Proje güncelleme hatası:', err);
+    if (err.code === 11000 && err.keyPattern && err.keyPattern.name) {
+      return res.status(409).json({ message: "Bu isimde bir proje zaten mevcut.", field: "name" });
+    }
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(val => val.message);
+      return res.status(400).json({ message: messages.join(', ') });
+    }
+    res.status(500).json({ message: "Sunucu hatası, proje güncellenemedi." });
   }
 });
 
-// DELETE a project by ID
+// Projeyi sil
 router.delete('/:id', authenticateUser, async (req, res) => {
-  const { id } = req.params;
   try {
-    const deletedProject = await deleteProjectById(id);
-    if (!deletedProject) {
-      return res.status(404).send('Project not found');
+    const { id } = req.params;
+    const userId = req.userId; 
+    const existingProject = await getProjectById(id);
+
+    if (!existingProject || existingProject.userId._id.toString() !== userId) { 
+      return res.status(403).json({ message: "Bu projeyi silmeye yetkiniz yok." });
     }
-    res.status(200).send(`Project with id ${id} deleted`);
+
+    await deleteProjectById(id);
+    res.status(204).send(); 
   } catch (err) {
-    res.status(500).send('Error deleting project');
+    console.error('Proje silme hatası:', err);
+    res.status(500).json({ message: 'Sunucu hatası, proje silinemedi.' });
   }
 });
 
