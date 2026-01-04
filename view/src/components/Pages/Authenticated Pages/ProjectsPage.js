@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { Plus, Edit2, Trash2, Save, X, Search, Clock, Calendar, Users, FileText, Upload, CheckCircle, AlertCircle } from "lucide-react";
 import "../../../style/Pages/ProjectsPage.css";
 
-// API fonksiyonlarınızı import edin
-// import { fetchProjects, createProject, updateProject, deleteProject, fetchEmployees } from "../../../api/apiCalls/Express/projectApi.js";
-// import GlobalSpinner from "../../GlobalSpinner.js";
+// API fonksiyonlarınızı import edin (gerçek API hazır olduğunda bu satırları etkinleştirin)
+import { fetchProjects, createProject, updateProject, deleteProject } from "../../../api/apiCalls/Express/projectsApi.js";
+// import { fetchEmployees } from "../../../api/apiCalls/Express/employeeApi.js"; // Employee API'nız olduğunda bunu da import edin
+import GlobalSpinner from "../../GlobalSpinner.js"; // GlobalSpinner'ı import et
 
 export default function Projects() {
   const navigate = useNavigate();
@@ -16,8 +17,8 @@ export default function Projects() {
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true); // Başlangıçta loading true olacak
+  const [employees, setEmployees] = useState([]); // Çalışan listesi
   
   // Form state
   const [formData, setFormData] = useState({
@@ -25,65 +26,64 @@ export default function Projects() {
     year: new Date().getFullYear().toString(),
     responsibles: [],
     description: "",
-    file: null
+    file: null // Dosya yükleme için
   });
 
   const [formErrors, setFormErrors] = useState({});
-  const [employeeSearch, setEmployeeSearch] = useState("");
+  const [employeeSearch, setEmployeeSearch] = useState(""); // Çalışan arama inputu için state
 
-  // Mock data - gerçek uygulamada API'den gelecek
+  // Veri yükleme (projeler ve çalışanlar)
   useEffect(() => {
-    // Mock employees
-    const mockEmployees = [
-      { _id: "1", name: "Ahmet Yılmaz" },
-      { _id: "2", name: "Ayşe Demir" },
-      { _id: "3", name: "Mehmet Kaya" },
-      { _id: "4", name: "Fatma Şahin" },
-      { _id: "5", name: "Ali Çelik" }
-    ];
-    setEmployees(mockEmployees);
+    const loadData = async () => {
+      try {
+        setLoading(true); // Yüklemeye başlarken spinner'ı göster
+        
+        // Mock employees verisi (Gerçek Employee API'nız hazır olana kadar)
+        const mockEmployees = [
+          { _id: "1", name: "Ahmet Yılmaz" },
+          { _id: "2", name: "Ayşe Demir" },
+          { _id: "3", name: "Mehmet Kaya" },
+          { _id: "4", name: "Fatma Şahin" },
+          { _id: "5", name: "Ali Çelik" }
+        ];
+        setEmployees(mockEmployees);
+        // Eğer gerçek Employee API'nız varsa:
+        // const fetchedEmployees = await fetchEmployees(); 
+        // setEmployees(fetchedEmployees);
 
-    // Mock projects
-    const mockProjects = [
-      {
-        _id: "1",
-        name: "Dijital Dönüşüm Projesi",
-        year: "2025",
-        responsibles: ["Ahmet Yılmaz", "Ayşe Demir"],
-        description: "Şirket genelinde dijital dönüşüm süreçlerinin yönetilmesi ve uygulanması.",
-        fileName: "dijital_donusum_plan.pdf",
-        status: "active",
-        createdAt: "2024-01-15",
-        updatedAt: "2024-12-20"
-      },
-      {
-        _id: "2",
-        name: "Müşteri Deneyimi İyileştirme",
-        year: "2025",
-        responsibles: ["Mehmet Kaya"],
-        description: "Müşteri memnuniyetini artırmak için kapsamlı deneyim iyileştirme çalışmaları.",
-        fileName: "musteri_deneyimi.docx",
-        status: "planning",
-        createdAt: "2024-02-10",
-        updatedAt: "2024-12-25"
+        // Gerçek API çağrısı: Projeleri backend'den çek
+        const fetchedProjects = await fetchProjects(); 
+        setProjects(fetchedProjects);
+        setFilteredProjects(fetchedProjects); // Başlangıçta filtrelenmiş liste de tüm projeler olacak
+
+      } catch (error) {
+        console.error("Veri yüklenirken hata oluştu:", error);
+        // Hata durumunda kullanıcıya bilgi gösterme veya başka bir aksiyon alma
+      } finally {
+        setLoading(false); // Yükleme bittiğinde spinner'ı gizle
       }
-    ];
-    setProjects(mockProjects);
-    setFilteredProjects(mockProjects);
-    setLoading(false);
-  }, []);
+    };
 
-  // Search filtering
-  useEffect(() => {
-    const filtered = projects.filter(project => 
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.responsibles.some(r => r.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-    setFilteredProjects(filtered);
-  }, [searchQuery, projects]);
+    loadData();
+  }, []); // Boş bağımlılık dizisi, component mount edildiğinde bir kere çalışmasını sağlar
 
-  // Form handlers
+  // Arama filtreleme
+    useEffect(() => {
+      const filtered = projects.filter(project => {
+        // project'in undefined veya null olup olmadığını kontrol et
+        if (!project) {
+          return false; // Undefined veya null olan elemanları filtrele
+        }
+        return (
+          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (project.responsibles && project.responsibles.some(r => r.toLowerCase().includes(searchQuery.toLowerCase())))
+        );
+      });
+      setFilteredProjects(filtered);
+    }, [searchQuery, projects]);
+    
+  // Modal açma/kapama ve form durumunu yönetme
   const handleOpenModal = (project = null) => {
     if (project) {
       setEditingProject(project);
@@ -92,7 +92,7 @@ export default function Projects() {
         year: project.year,
         responsibles: project.responsibles,
         description: project.description,
-        file: null
+        file: null // Dosya düzenlemede yeniden seçilmesi gerekebilir
       });
     } else {
       setEditingProject(null);
@@ -104,14 +104,15 @@ export default function Projects() {
         file: null
       });
     }
-    setFormErrors({});
+    setFormErrors({}); // Form açıldığında hata mesajlarını temizle
+    setEmployeeSearch(""); // Çalışan arama inputunu temizle
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingProject(null);
-    setFormData({
+    setFormData({ // Formu sıfırla
       name: "",
       year: new Date().getFullYear().toString(),
       responsibles: [],
@@ -119,30 +120,32 @@ export default function Projects() {
       file: null
     });
     setFormErrors({});
-    setEmployeeSearch("");
+    setEmployeeSearch(""); // Çalışan arama inputunu temizle
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
+    // Kullanıcı yazmaya başladığında ilgili hata mesajını temizle
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
 
+  // Sorumlu çalışan seçimi
   const handleResponsibleToggle = (employeeName) => {
     setFormData(prev => ({
       ...prev,
       responsibles: prev.responsibles.includes(employeeName)
-        ? prev.responsibles.filter(r => r !== employeeName)
-        : [...prev.responsibles, employeeName]
+        ? prev.responsibles.filter(r => r !== employeeName) // Zaten seçiliyse çıkar
+        : [...prev.responsibles, employeeName] // Seçili değilse ekle
     }));
     if (formErrors.responsibles) {
       setFormErrors(prev => ({ ...prev, responsibles: "" }));
     }
   };
 
+  // Dosya seçimi
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -156,78 +159,98 @@ export default function Projects() {
     }
   };
 
+  // Form doğrulama (validation)
   const validateForm = () => {
     const errors = {};
     if (!formData.name.trim()) errors.name = "Proje adı gereklidir";
     if (!formData.year) errors.year = "Yıl seçimi gereklidir";
     if (formData.responsibles.length === 0) errors.responsibles = "En az bir sorumlu seçmelisiniz";
     if (!formData.description.trim()) errors.description = "Proje açıklaması gereklidir";
-    if (formData.description.length > 1000) errors.description = "Açıklama 1000 karakteri geçemez";
+    if (formData.description.length > 1000) errors.description = `Açıklama ${1000 - formData.description.length} karakter daha az olmalı`;
+    // Yeni proje oluşturuluyorsa ve dosya seçilmemişse dosya zorunlu
     if (!editingProject && !formData.file) errors.file = "Yıllık plan dosyası gereklidir";
     
     setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    return Object.keys(errors).length === 0; // Hata yoksa true döner
   };
 
+  // Form gönderimi (yeni proje oluşturma/düzenleme)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
+    console.log(`handleSubmit: `, formData);
+    if (!validateForm()) return; // Form doğrulamadan geçmezse dur
+    console.log(`handleSubmit: after validateForm`);
 
     try {
-      setLoading(true);
+      setLoading(true); // Yüklemeye başlarken spinner'ı göster
       
+      const projectData = new FormData(); // Dosya yüklemek için FormData kullanmalıyız
+      projectData.append('name', formData.name);
+      projectData.append('year', formData.year);
+      projectData.append('description', formData.description);
+      projectData.append('responsibles', JSON.stringify(formData.responsibles)); // Array'i string olarak gönder
+
+      if (formData.file) {
+        projectData.append('file', formData.file);
+      }
+
       if (editingProject) {
-        // Güncelleme işlemi
+        // Mevcut projeyi güncelleme işlemi
+        // const response = await updateProject(editingProject._id, projectData); // Gerçek API çağrısı
+        // setProjects(prev => prev.map(p => p._id === editingProject._id ? response.project : p));
+        // Mock güncelleme:
         const updatedProject = {
           ...editingProject,
           ...formData,
           fileName: formData.file ? formData.file.name : editingProject.fileName,
           updatedAt: new Date().toISOString()
         };
-        
         setProjects(prev => prev.map(p => p._id === editingProject._id ? updatedProject : p));
-        // await updateProject(editingProject._id, formData);
       } else {
-        // Yeni proje oluşturma
+        // Yeni proje oluşturma işlemi
+         const response = await createProject(projectData); // Gerçek API çağrısı
+         setProjects(prev => [...prev, response.project]);
+        // Mock oluşturma:
         const newProject = {
           _id: Date.now().toString(),
           ...formData,
-          fileName: formData.file.name,
+          fileName: formData.file ? formData.file.name : null, // Yeni projede dosya varsa adını ekle
           status: "planning",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
-        
         setProjects(prev => [...prev, newProject]);
-        // await createProject(formData);
       }
       
-      handleCloseModal();
+      handleCloseModal(); // Modal'ı kapat
     } catch (error) {
-      console.error("Error saving project:", error);
+      console.error("Proje kaydedilirken hata oluştu:", error);
       setFormErrors({ submit: "Proje kaydedilirken bir hata oluştu" });
     } finally {
-      setLoading(false);
+      setLoading(false); // Yükleme bittiğinde spinner'ı gizle
     }
   };
 
+  // Proje silme işlemi
   const handleDeleteProject = async (projectId) => {
     try {
-      setProjects(prev => prev.filter(p => p._id !== projectId));
-      setDeleteConfirm(null);
-      // await deleteProject(projectId);
+      // await deleteProject(projectId); // Gerçek API çağrısı
+      setProjects(prev => prev.filter(p => p._id !== projectId)); // UI'dan kaldır
+      setDeleteConfirm(null); // Onay durumunu sıfırla
     } catch (error) {
-      console.error("Error deleting project:", error);
+      console.error("Proje silinirken hata oluştu:", error);
+      // Hata mesajı gösterilebilir
     }
   };
 
+  // Tarih formatlama yardımcı fonksiyonu
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
+  // Durum bilgisi yardımcı fonksiyonu
   const getStatusInfo = (status) => {
     switch (status) {
       case "active":
@@ -241,157 +264,162 @@ export default function Projects() {
     }
   };
 
+  // Yıl seçenekleri
   const yearOptions = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i);
 
-  // Filter employees based on search
+  // Çalışan arama inputuna göre çalışanları filtrele
   const filteredEmployees = employees.filter(employee =>
     employee.name.toLowerCase().includes(employeeSearch.toLowerCase())
   );
 
   return (
     <div className="projects-page">
-      <div className="projects-container">
-        {/* Header */}
-        <div className="projects-header">
-          <div className="header-content">
-            <div className="header-text">
-              <h1>Projelerim</h1>
-              <p>Projelerinizi yönetin ve etkinliklerinizi takip edin</p>
-            </div>
-            <button className="btn btn-primary" onClick={() => handleOpenModal()}>
-              <Plus className="icon" />
-              Yeni Proje
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <div className="search-bar">
-            <Search className="search-icon" />
-            <input
-              type="text"
-              placeholder="Projelerde ara..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Projects Grid */}
-        {filteredProjects.length === 0 ? (
-          <div className="empty-state">
-            <FileText className="empty-icon" />
-            <h3>{searchQuery ? "Proje bulunamadı" : "Henüz proje yok"}</h3>
-            <p>
-              {searchQuery 
-                ? "Arama kriterlerinizi değiştirerek tekrar deneyin" 
-                : "İlk projenizi oluşturarak başlayın"
-              }
-            </p>
-            {!searchQuery && (
+      {loading && <GlobalSpinner />} {/* Eğer loading true ise GlobalSpinner'ı göster */}
+      {!loading && ( // Eğer loading false ise sayfa içeriğini göster
+        <div className="projects-container">
+          {/* Header */}
+          <div className="projects-header">
+            <div className="header-content">
+              <div className="header-text">
+                <h1>Projelerim</h1>
+                <p>Projelerinizi yönetin ve etkinliklerinizi takip edin</p>
+              </div>
               <button className="btn btn-primary" onClick={() => handleOpenModal()}>
                 <Plus className="icon" />
-                Proje Oluştur
+                Yeni Proje
               </button>
-            )}
+            </div>
+
+            {/* Search Bar */}
+            <div className="search-bar">
+              <Search className="search-icon" />
+              <input
+                type="text"
+                placeholder="Projelerde ara..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
-        ) : (
-          <div className="projects-grid">
-            {filteredProjects.map((project) => {
-              const statusInfo = getStatusInfo(project.status);
-              const StatusIcon = statusInfo.icon;
-              
-              return (
-                <div
-                  key={project._id}
-                  className="project-card"
-                  onClick={(e) => {
-                    if (!e.target.closest("button")) {
-                      navigate(`/project/${project._id}`);
-                    }
-                  }}
-                >
-                  {/* Card Header */}
-                  <div className="card-header">
-                    <div className="card-title-section">
-                      <h3>{project.name}</h3>
-                      <span className={`status-badge ${statusInfo.className}`}>
-                        <StatusIcon className="status-icon" />
-                        {statusInfo.label}
-                      </span>
-                    </div>
-                    <div className="card-year">{project.year}</div>
-                  </div>
 
-                  {/* Card Body */}
-                  <div className="card-body">
-                    <p className="card-description">{project.description}</p>
-                    
-                    {/* Responsibles */}
-                    <div className="card-info">
-                      <Users className="info-icon" />
-                      <div className="responsibles">
-                        {project.responsibles.slice(0, 2).map((resp, idx) => (
-                          <span key={idx} className="responsible-badge">{resp}</span>
-                        ))}
-                        {project.responsibles.length > 2 && (
-                          <span className="responsible-badge">+{project.responsibles.length - 2}</span>
-                        )}
+          {/* Projects Grid */}
+          {filteredProjects.length === 0 ? (
+            <div className="empty-state">
+              <FileText className="empty-icon" />
+              <h3>{searchQuery ? "Proje bulunamadı" : "Henüz proje yok"}</h3>
+              <p>
+                {searchQuery 
+                  ? "Arama kriterlerinizi değiştirerek tekrar deneyin" 
+                  : "İlk projenizi oluşturarak başlayın"
+                }
+              </p>
+              {!searchQuery && (
+                <button className="btn btn-primary" onClick={() => handleOpenModal()}>
+                  <Plus className="icon" />
+                  Proje Oluştur
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="projects-grid">
+              {filteredProjects.map((project) => {
+                const statusInfo = getStatusInfo(project.status);
+                const StatusIcon = statusInfo.icon;
+                
+                return (
+                  <div
+                    key={project._id}
+                    className="project-card"
+                    onClick={(e) => {
+                      // Butonlara tıklanınca navigate etme, sadece kartın boş alanına tıklanınca et
+                      if (!e.target.closest("button")) {
+                        navigate(`/project/${project._id}`);
+                      }
+                    }}
+                  >
+                    {/* Card Header */}
+                    <div className="card-header">
+                      <div className="card-title-section">
+                        <h3>{project.name}</h3>
+                        <span className={`status-badge ${statusInfo.className}`}>
+                          <StatusIcon className="status-icon" />
+                          {statusInfo.label}
+                        </span>
                       </div>
+                      <div className="card-year">{project.year}</div>
                     </div>
 
-                    {/* File Info */}
-                    {project.fileName && (
+                    {/* Card Body */}
+                    <div className="card-body">
+                      <p className="card-description">{project.description}</p>
+                      
+                      {/* Responsibles */}
                       <div className="card-info">
-                        <FileText className="info-icon" />
-                        <span className="file-name">{project.fileName}</span>
+                        <Users className="info-icon" />
+                        <div className="responsibles">
+                          {project.responsibles.slice(0, 2).map((resp, idx) => (
+                            <span key={idx} className="responsible-badge">{resp}</span>
+                          ))}
+                          {project.responsibles.length > 2 && (
+                            <span className="responsible-badge">+{project.responsibles.length - 2}</span>
+                          )}
+                        </div>
                       </div>
-                    )}
 
-                    {/* Metadata */}
-                    <div className="card-metadata">
-                      <div className="metadata-item">
-                        <Calendar className="metadata-icon" />
-                        <span>Oluşturulma: {formatDate(project.createdAt)}</span>
-                      </div>
-                      <div className="metadata-item">
-                        <Clock className="metadata-icon" />
-                        <span>Güncelleme: {formatDate(project.updatedAt)}</span>
+                      {/* File Info */}
+                      {project.fileName && (
+                        <div className="card-info">
+                          <FileText className="info-icon" />
+                          <span className="file-name">{project.fileName}</span>
+                        </div>
+                      )}
+
+                      {/* Metadata */}
+                      <div className="card-metadata">
+                        <div className="metadata-item">
+                          <Calendar className="metadata-icon" />
+                          <span>Oluşturulma: {formatDate(project.createdAt)}</span>
+                        </div>
+                        <div className="metadata-item">
+                          <Clock className="metadata-icon" />
+                          <span>Güncelleme: {formatDate(project.updatedAt)}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Card Footer */}
-                  <div className="card-footer">
-                    <button
-                      className="btn btn-edit"
-                      onClick={() => handleOpenModal(project)}
-                    >
-                      <Edit2 className="icon" />
-                      Düzenle
-                    </button>
-                    {deleteConfirm === project._id ? (
+                    {/* Card Footer */}
+                    <div className="card-footer">
                       <button
-                        className="btn btn-delete-confirm"
-                        onClick={() => handleDeleteProject(project._id)}
+                        className="btn btn-edit"
+                        onClick={() => handleOpenModal(project)}
                       >
-                        Emin misiniz?
+                        <Edit2 className="icon" />
+                        Düzenle
                       </button>
-                    ) : (
-                      <button
-                        className="btn btn-delete"
-                        onClick={() => setDeleteConfirm(project._id)}
-                      >
-                        <Trash2 className="icon" />
-                        Sil
-                      </button>
-                    )}
+                      {deleteConfirm === project._id ? (
+                        <button
+                          className="btn btn-delete-confirm"
+                          onClick={() => handleDeleteProject(project._id)}
+                        >
+                          Emin misiniz?
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-delete"
+                          onClick={() => setDeleteConfirm(project._id)}
+                        >
+                          <Trash2 className="icon" />
+                          Sil
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (
@@ -462,7 +490,7 @@ export default function Projects() {
                   {employeeSearch && (
                     <button
                       type="button"
-                      className="clear-search"
+                      className="clear-search"  
                       onClick={() => setEmployeeSearch("")}
                     >
                       <X className="icon-small" />
@@ -540,7 +568,7 @@ export default function Projects() {
               {formErrors.submit && (
                 <div className="form-error">{formErrors.submit}</div>
               )}
-
+              
               {/* Modal Footer */}
               <div className="modal-footer">
                 <button type="button" className="btn btn-cancel" onClick={handleCloseModal}>

@@ -11,6 +11,7 @@ const criteriasRoutes = require('./routes/criteriasRoutes');
 const decisionMatrixRoutes = require('./routes/decisionMatrixRoutes');
 */
 const authRoutes = require('./routes/authRoutes');
+const projectsRoutes = require('./routes/projectsRoutes');
 //const modelsRoutes = require('./routes/modelsRoutes');
 //const processRoutes = require('./routes/processRoutes');
 
@@ -36,6 +37,7 @@ app.use('/api/criterias', criteriasRoutes);
 app.use('/api/decisionMatrix', decisionMatrixRoutes);
 */
 app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectsRoutes);
 /*
 app.use('/api/models', modelsRoutes);
 app.use('/api/process', processRoutes);
