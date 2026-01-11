@@ -60,7 +60,8 @@ const updateProjects = async (id, updateData) => {
 };
 const updateProject = async (projectId, updatedData) => {
   //console.log("mid:", modelId, "updaedDate:", updatedData)
-  return (await expressAPI.put(`/projects/${projectId}`, updatedData, { withCredentials: true })).data;
+  const response = await expressAPI.put(`/projects/${projectId}`, updatedData, { withCredentials: true });
+  return {success: true, project: response.data};
 };
 
 const deleteProject = async (projectId) => {
