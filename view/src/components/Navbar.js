@@ -40,9 +40,6 @@ function Navbar({ saved = true, setSaved = () => {} }) {
           </button>
 
           <div className="nav-links desktop-only">
-            <button onClick={() => handleNavigation('/about')} className="nav-item">
-              <Info size={18} /> Hakkında
-            </button>
             {isLoggedIn && (
               <button onClick={() => handleNavigation('/projeler')} className="nav-item">
                 <FolderOpen size={18} /> Projelerim

@@ -8,7 +8,7 @@ import NonePrivateRoute from './components/Routes/NonePrivateRoute.js';
 
 // Yeni Sayfa Komponentleri
 import ProjectsPage from './components/Pages/Authenticated Pages/ProjectsPage.js';
-import ProjectPage from './components/Pages/Authenticated Pages/ProjectPage.js';
+import ProjectDetailPage from './components/Pages/Authenticated Pages/ProjectDetailPage.js';
 
 import LoginPage from "./components/Pages/None Authenticated Pages/LoginPage.js"
 import RegisterPage from "./components/Pages/None Authenticated Pages/RegisterPage.js"
@@ -40,7 +40,7 @@ function App() {
           <Routes>
             {/* Ana Sayfa: Giriş yapılmışsa projelere, yapılmamışsa tanıtıma yönlendir */}
             <Route path="/" element={
-              isLoggedIn ? <Navigate to="/projeler" /> : <LandingPage />
+              isLoggedIn ? <Navigate to="/projeler" /> : <LoginPage />
             } />
 
             {/* Auth Gerekli Olmayan Sayfalar */}
@@ -65,7 +65,7 @@ function App() {
 
             <Route path="/proje/:projectId" element={
               <PrivateRoute>
-                <ProjectPage />
+                <ProjectDetailPage />
               </PrivateRoute>
             } />
 

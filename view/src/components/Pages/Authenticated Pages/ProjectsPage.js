@@ -299,14 +299,14 @@ export default function Projects() {
               {filteredProjects.map((project) => {
                 const statusInfo = getStatusInfo(project.status);
                 const StatusIcon = statusInfo.icon;
-                
+
                 return (
                   <div
                     key={project._id}
                     className="project-card"
                     onClick={(e) => {
                       if (!e.target.closest("button")) {
-                        navigate(`/project/${project._id}`);
+                        navigate(`/proje/${project._id}`);
                       }
                     }}
                   >
