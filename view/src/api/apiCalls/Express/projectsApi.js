@@ -36,7 +36,7 @@ const createProject = async (newProjectData) => {
 
 
 // Proje güncelleme - updateData da artık JSON objesi olacak
-const updateProject = async (id, updateData) => {
+const updateProjects = async (id, updateData) => {
   try {
     console.log(`updating project ${id}: `, updateData);
     const response = await expressAPI.put(`/projects/${id}`, updateData, { 
@@ -58,9 +58,12 @@ const updateProject = async (id, updateData) => {
     }
   }
 };
+const updateProject = async (projectId, updatedData) => {
+  //console.log("mid:", modelId, "updaedDate:", updatedData)
+  return (await expressAPI.put(`/projects/${projectId}`, updatedData, { withCredentials: true })).data;
+};
 
 const deleteProject = async (projectId) => {
-  console.log("sendig")
   return (await expressAPI.delete(`/projects/${projectId}`, { withCredentials: true })).data;
 };
 

@@ -5,8 +5,8 @@ const router = express.Router();
 const { createProject, updateProjectById, deleteProjectById, getAllProjectsByUserId, getProjectById } = require('../models/projectModel');
 const authenticateUser = require('../middleware/authenticateUser'); 
 
-// Yeni proje oluşturma
-router.post('/', authenticateUser, async (req, res) => {
+
+let createprojectHandler = async (req, res) => {
   try {
     console.log("req.body is: ", req.body); 
 
@@ -38,7 +38,38 @@ router.post('/', authenticateUser, async (req, res) => {
     }
     res.status(500).json({ message: "Sunucu hatası, proje oluşturulamadı." });
   }
-});
+}
+
+let updateProjectHandler = async (req, res) => {
+  const { projectId } = req.params;
+  const updateData = req.body; 
+  console.log("istek ulaştı: ", projectId, updateData)
+  try {
+    console.log("buraya girdi")
+    const updatedCase = await updateProjectById(projectId, updateData);
+    console.log("sıkıntısız çıktı")
+    if (!updatedCase) {
+      return res.status(404).send('Case not found');
+    }
+    res.status(200).json(updatedCase);
+  } catch (err) {
+    res.status(500).send(`Error updating case: ${err}`);
+  }
+}
+
+let deleteProjectHandler = async (req, res) => {
+  const { projectId } = req.params;
+  try {
+    const deletedModel = await deleteProjectById(projectId);
+    if (!deletedModel) {
+      return res.status(404).send('Model not found');
+    }
+    res.status(200).send(`Model with id ${projectId} deleted`);
+  } catch (err) {
+    res.status(500).send('Error deleting case');
+  }
+}
+
 
 // Kullanıcının tüm projelerini getir
 router.get('/', authenticateUser, async (req, res) => {
@@ -52,6 +83,20 @@ router.get('/', authenticateUser, async (req, res) => {
   }
 });
 
+// Yeni proje oluşturma
+router.post('/', authenticateUser, createprojectHandler);
+
+// Proje güncelleme
+router.put('/:projectId', authenticateUser, updateProjectHandler);
+
+// Proje silme
+router.delete('/:projectId', authenticateUser, deleteProjectHandler);
+
+
+
+
+
+/*
 // ID'ye göre proje getir
 router.get('/:id', authenticateUser, async (req, res) => {
   try {
@@ -66,6 +111,8 @@ router.get('/:id', authenticateUser, async (req, res) => {
     res.status(500).json({ message: 'Sunucu hatası, proje getirilemedi.' });
   }
 });
+
+
 
 // Projeyi güncelle
 router.put('/:id', authenticateUser, async (req, res) => {
@@ -130,5 +177,6 @@ router.delete('/:id', authenticateUser, async (req, res) => {
     res.status(500).json({ message: 'Sunucu hatası, proje silinemedi.' });
   }
 });
+*/
 
 module.exports = router;

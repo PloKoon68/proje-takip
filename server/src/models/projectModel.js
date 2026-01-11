@@ -28,8 +28,7 @@ const projectSchema = new mongoose.Schema({
     maxlength: 1000 
   },
   fileName: { // Yüklenen dosyanın adı
-    type: String,
-    required: function() { return !this.isModified('fileName'); } // Sadece yeni projede zorunlu, güncellerken değil
+    type: String
   },
   status: { // Proje durumu (örneğin 'planning', 'active', 'completed')
     type: String,
@@ -65,7 +64,7 @@ const getAllProjectsByUserId = async (userId) => {
   return await Project.find({ userId: userId }).sort({ createdAt: -1 });
 };
 
-const getProjectById = async (projectId) => {
+const getProjectByUserId = async (projectId) => {
   return await Project.findById(projectId);
 };
 
@@ -81,7 +80,7 @@ module.exports = {
   Project, // Şemayı diğer modellerde kullanmak için dışa aktarıyoruz
   createProject,
   getAllProjectsByUserId,
-  getProjectById,
+  getProjectByUserId,
   updateProjectById,
   deleteProjectById
 };
